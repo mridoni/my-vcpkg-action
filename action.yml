@@ -1,0 +1,65 @@
+name: my-vcpkg-action
+description: Simple action to run vcpkg and cache results
+inputs:
+  pkgs:
+    description: "List of packages to build, separated by spaces"
+    required: true
+  triplet:
+    description: "vcpkg triplet to use"
+    required: true
+  extra-args:
+    description: "Extra vcpkg command line args (optional)"
+    required: false
+  cache-key:
+    description: "Additional cache key component (optional)"
+    required: false
+  disable-cache:
+    description: "Disable cache (useful for release builds)"
+    required: false
+    default: 'false'
+  revision:
+    description: "vcpkg revision to checkout."
+    required: false
+    default: ''
+runs:
+  using: "composite"
+  steps:
+  - name: vcpkg-dry-run-win
+    if: runner.os == 'Windows'
+    working-directory: ${{ env.VCPKG_ROOT }}
+    shell: cmd
+    run: |
+      set VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg_cache
+      mkdir %VCPKG_DEFAULT_BINARY_CACHE%
+      "${{ env.VCPKG_ROOT }}\vcpkg.exe" install --dry-run --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }} > vcpkg_dry_run.txt
+  - name: vcpkg-dry-run-unix
+    if: runner.os != 'Windows'
+    working-directory: ${{ env.VCPKG_ROOT }}
+    shell: bash
+    run: |
+      export VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_cache
+      mkdir $VCPKG_DEFAULT_BINARY_CACHE
+      "${{ env.VCPKG_ROOT }}/vcpkg" install --dry-run --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }} > vcpkg_dry_run.txt
+  - name: cache-vcpkg-archives
+    if: ${{ inputs.disable_cache != 'true' }}
+    id: cache-vcpkg-archives
+    uses: pat-s/always-upload-cache@v3
+    with:
+      path: ${{ github.workspace }}/vcpkg_cache
+      key: ${{ runner.os }}-${{ inputs.triplet }}-vcpkg-${{ hashFiles('vcpkg/vcpkg_dry_run.txt') }}
+    env:
+      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
+  - name: build-vcpkg-win
+    if: runner.os == 'Windows'
+    shell: cmd
+    working-directory: ${{ env.VCPKG_ROOT }}
+    run: |
+      set VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg_cache
+      "${{ env.VCPKG_ROOT }}\vcpkg.exe" install --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }}
+  - name: build-vcpkg-unix
+    if: runner.os != 'Windows'
+    shell: bash
+    working-directory: ${{ env.VCPKG_ROOT }}
+    run: |
+      export VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_cache
+      "${{ env.VCPKG_ROOT }}/vcpkg" install --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }}
