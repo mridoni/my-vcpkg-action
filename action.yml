@@ -47,8 +47,6 @@ runs:
     with:
       path: ${{ github.workspace }}/vcpkg_cache
       key: ${{ runner.os }}-${{ inputs.triplet }}-vcpkg-${{ hashFiles('vcpkg/vcpkg_dry_run.txt') }}
-    env:
-      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
   - name: build-vcpkg-win
     if: runner.os == 'Windows'
     shell: cmd
