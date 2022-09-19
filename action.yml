@@ -29,7 +29,7 @@ runs:
     working-directory: ${{ env.VCPKG_ROOT }}
     shell: cmd
     run: |
-      set VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg_cache
+      set VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg_cache_${{ inputs.cache-key }}
       mkdir %VCPKG_DEFAULT_BINARY_CACHE%
       "${{ env.VCPKG_ROOT }}\vcpkg.exe" install --dry-run --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }} > vcpkg_dry_run.txt
   - name: vcpkg-dry-run-unix
@@ -37,7 +37,7 @@ runs:
     working-directory: ${{ env.VCPKG_ROOT }}
     shell: bash
     run: |
-      export VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_cache
+      export VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_cache_${{ inputs.cache-key }}
       mkdir $VCPKG_DEFAULT_BINARY_CACHE
       "${{ env.VCPKG_ROOT }}/vcpkg" install --dry-run --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }} > vcpkg_dry_run.txt
   - name: cache-vcpkg-archives
@@ -54,12 +54,12 @@ runs:
     shell: cmd
     working-directory: ${{ env.VCPKG_ROOT }}
     run: |
-      set VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg_cache
+      set VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}\vcpkg_cache_${{ inputs.cache-key }}
       "${{ env.VCPKG_ROOT }}\vcpkg.exe" install --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }}
   - name: build-vcpkg-unix
     if: runner.os != 'Windows'
     shell: bash
     working-directory: ${{ env.VCPKG_ROOT }}
     run: |
-      export VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_cache
+      export VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_cache_${{ inputs.cache-key }}
       "${{ env.VCPKG_ROOT }}/vcpkg" install --triplet ${{ inputs.triplet }} ${{ inputs.extra-args }} ${{ inputs.pkgs }}
