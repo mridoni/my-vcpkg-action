@@ -46,7 +46,7 @@ runs:
     uses: pat-s/always-upload-cache@v3
     with:
       path: ${{ github.workspace }}/vcpkg_cache
-      key: ${{ runner.os }}-${{ inputs.triplet }}-vcpkg-${{ hashFiles('vcpkg_dry_run.txt') }}
+      key: ${{ runner.os }}-${{ inputs.triplet }}-vcpkg-${{ hashFiles('${{ env.VCPKG_ROOT }}\vcpkg_dry_run.txt') }}
   - name: build-vcpkg-win
     if: runner.os == 'Windows'
     shell: cmd
